@@ -15,6 +15,8 @@ let TIM = null;
 var userId,examNo,seatOrder,tim, g_clarity;
 var tencentTRTC = null;
 var pUni = null;
+var pPlus = null;
+var pPermision = null;
 var cameraFront = false; // 记录摄像头方向,默认开启后置摄像头
 var sdkAppId = null;
 var userSig = null;
@@ -95,6 +97,20 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
 
   pUni = uniAppImport("uni");
 
+  pPlus = uniAppImport("plus");
+
+  await pPlus["screen.lockOrientation"]('landscape-primary');
+
+  pPermision = uniAppImport("permision");
+
+  const info = await pUni.getSystemInfoSync();
+  alert(JSON.stringify(info))
+  if (info.platform === 'android') {
+    pPermision.requestAndroidPermission('android.permission.RECORD_AUDIO');
+    pPermision.requestAndroidPermission('android.permission.CAMERA');
+  }
+
+  // todo: 需要支持一下获取变量的能力
 });
 
 /**

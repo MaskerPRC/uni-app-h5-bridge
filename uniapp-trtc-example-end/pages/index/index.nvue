@@ -122,18 +122,13 @@
 			}
 		},
 		mounted() {
-			plus.screen.lockOrientation('landscape-primary');
 			uni.getSystemInfo({
 				success: function(res) {
 					this.height = res.windowHeight;
 					this.width = res.windowWidth;
 				}.bind(this)
-			});
-			if (uni.getSystemInfoSync().platform === 'android') {
-				permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
-				permision.requestAndroidPermission('android.permission.CAMERA');
-			}
-
+			});  
+  
 			// 生成 userSig
 			const {
 				sdkAppId,
@@ -158,6 +153,7 @@
 			this.TrtcCloud = TrtcCloud;
 			this.uni = uni;
 			this.plus = plus;
+			this.permision = permision;
 		}
 	}
 </script>
