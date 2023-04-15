@@ -12,16 +12,16 @@ import {reactive} from "vue";
 import {getUuid} from "@/uuid";
 let layer = null;
 let TIM = null;
-import "../src/assets/jquery-1.10.2.min"
-import "../src/assets/tim-js"
-import "../src/assets/lib-generate-test-usersig.min"
-import "../src/assets/layer/layer"
-import "../src/assets/utils/functions"
-var userId,invitedCode,examNo,seatOrder,roomOpenDate,tim, g_clarity;
+var userId,examNo,seatOrder,tim, g_clarity;
 var tencentTRTC = null;
+var pUni = null;
 var cameraFront = false; // 记录摄像头方向,默认开启后置摄像头
 var sdkAppId = null;
 var userSig = null;
+userId = "uye";
+examNo = "01";
+seatOrder = "01";
+g_clarity = 1;
 
 /**
  * 绑定uniapp原生与页面的逻辑
@@ -40,7 +40,7 @@ document.addEventListener('UniAppJSBridgeReady', function() {
     // eslint-disable-next-line no-unused-vars
     get(target, key) {
       if (key !== '__v_isRef') {
-        return function (params1, params2) {
+        return function (param1, param2) {
           return new Promise((resolve) => {
             const uuidFunc = getUuid();
             const uuidFunc1 = getUuid();
@@ -49,33 +49,32 @@ document.addEventListener('UniAppJSBridgeReady', function() {
               resolve(ret);
               window[uuidFunc] = null
             };
-            window[uuidFunc1] = function (ret) {
-              resolve(ret);
-              window[uuidFunc1] = null
-            };
-            window[uuidFunc2] = function (ret) {
-              resolve(ret);
-              window[uuidFunc2] = null
-            };
-            let passParam1 = params1;
-            let passParam2 = params2;
+            let passParam1 = param1;
+            let passParam2 = param2;
             // eslint-disable-next-line no-prototype-builtins
-            if(Function.prototype.isPrototypeOf(params1)) {
+            if(Function.prototype.isPrototypeOf(param1)) {
+              window[uuidFunc1] = function (_param1, _param2) {
+                param1(JSON.parse(_param1), JSON.parse(_param2));
+              };
               passParam1 = uuidFunc1;
             }
             // eslint-disable-next-line no-prototype-builtins
-            if(Function.prototype.isPrototypeOf(params2)) {
+            if(Function.prototype.isPrototypeOf(param2)) {
+              window[uuidFunc2] = function (_param1, _param2) {
+                param2(JSON.parse(_param1), JSON.parse(_param2));
+              };
               passParam2 = uuidFunc2;
             }
             // eslint-disable-next-line no-undef
             uni.postMessage({
               data: {
+                objName: "trtcCloud",
                 func: key,
                 params1: passParam1,
                 params2: passParam2,
                 retFunc: uuidFunc,
                 // eslint-disable-next-line no-prototype-builtins
-                paramsCallbackType: [Function.prototype.isPrototypeOf(params1), Function.prototype.isPrototypeOf(params2)]
+                paramsCallbackType: [Function.prototype.isPrototypeOf(param1), Function.prototype.isPrototypeOf(param2)]
               },
             });
           });
@@ -86,6 +85,57 @@ document.addEventListener('UniAppJSBridgeReady', function() {
   };
 
   tencentTRTC = new Proxy(state, handler);
+
+  const state1 = reactive({});
+
+  const handler1 = {
+    // eslint-disable-next-line no-unused-vars
+    get(target, key) {
+      if (key !== '__v_isRef') {
+        return function (param1, param2) {
+          return new Promise((resolve) => {
+            const uuidFunc = getUuid();
+            const uuidFunc1 = getUuid();
+            const uuidFunc2 = getUuid();
+            window[uuidFunc] = function (ret) {
+              resolve(ret);
+            };
+            let passParam1 = param1;
+            let passParam2 = param2;
+            // eslint-disable-next-line no-prototype-builtins
+            if(Function.prototype.isPrototypeOf(param1)) {
+              window[uuidFunc1] = function (_param1, _param2) {
+                param1(JSON.parse(_param1), JSON.parse(_param2));
+              };
+              passParam1 = uuidFunc1;
+            }
+            // eslint-disable-next-line no-prototype-builtins
+            if(Function.prototype.isPrototypeOf(param2)) {
+              window[uuidFunc2] = function (_param1, _param2) {
+                param2(JSON.parse(_param1), JSON.parse(_param2));
+              };
+              passParam2 = uuidFunc2;
+            }
+            // eslint-disable-next-line no-undef
+            uni.postMessage({
+              data: {
+                objName: "uni",
+                func: key,
+                params1: passParam1,
+                params2: passParam2,
+                retFunc: uuidFunc,
+                // eslint-disable-next-line no-prototype-builtins
+                paramsCallbackType: [Function.prototype.isPrototypeOf(param1), Function.prototype.isPrototypeOf(param2)]
+              },
+            });
+          });
+        }
+      }
+      return target[key];
+    },
+  };
+
+  pUni = new Proxy(state1, handler1);
 });
 
 /**
@@ -130,6 +180,7 @@ const clarityEnum = {
   "114": 2000, //114: 宽高比16:9，1920_1080，建议码率 VideoCall:2000kbps LIVE:3000kbps（此分辨率仅支持iOS）
 }
 
+// eslint-disable-next-line no-unused-vars
 function initTim() {
   try{
     if(!userId){
@@ -242,7 +293,7 @@ function joinRoomShowTitle(openStatus, openTime, joinType) {
   } else if(openStatus == 0){
     statusParam.time = openTime
     // eslint-disable-next-line no-undef
-    uni.showToast({
+    pUni.showToast({
       title: '暂未到开启时间，按照要求摆放设备即可，系统会自动开启',
       icon: 'none',
     });
@@ -259,42 +310,43 @@ function joinRoomShowTitle(openStatus, openTime, joinType) {
   }
 }
 
+// eslint-disable-next-line no-unused-vars
 function getExamInfo(invitedCode) {
   // eslint-disable-next-line no-undef
-  $.ajax({
-    url: '/openBeta/user/stuLogin',
-    async: false,
-    data: {invitedCode: invitedCode},
-    dataType: "json",
-    type: "POST",
-    success: function (data) {
-      var userId,examNo,seatOrder,clarityInner;
-      if(data.success){
-        userId = data.obj.userId;
-        clarityInner = data.obj.clarity;
-        examNo = data.obj.monitorExamRoom.examNo;
-        roomOpenDate = data.obj.monitorExamRoom.roomOpenDate;
-        if(roomOpenDate){
-          roomOpenDate = roomOpenDate.substring(5,roomOpenDate.length).replace("-","月").replace(" ","日 ");
-        }
-        seatOrder = data.obj.seatOrder;
-        var storage = window.localStorage;
-        storage.setItem("userId", userId);
-        storage.setItem("clarity", clarityInner);
-        storage.setItem("invitedCode", invitedCode);
-        storage.setItem("examNo", examNo);
-        storage.setItem("seatOrder", seatOrder);
-        //监考已开启，自动进入混流房间
-        preJoinRoom(isStart(data.obj.monitorExamRoom.roomOpenDate),data.obj.monitorExamRoom.roomOpenDate, roomOpenDate, 'mixRoom')
-      }else{
-        layer.alert(data.msg);
-      }
-    },
-    error: function (returndata) {
-      // eslint-disable-next-line no-undef
-      _error(returndata);
-    }
-  });
+  // $.ajax({
+  //   url: '/openBeta/user/stuLogin',
+  //   async: false,
+  //   data: {invitedCode: invitedCode},
+  //   dataType: "json",
+  //   type: "POST",
+  //   success: function (data) {
+  //     var userId,examNo,seatOrder,clarityInner;
+  //     if(data.success){
+  //       userId = data.obj.userId;
+  //       clarityInner = data.obj.clarity;
+  //       examNo = data.obj.monitorExamRoom.examNo;
+  //       roomOpenDate = data.obj.monitorExamRoom.roomOpenDate;
+  //       if(roomOpenDate){
+  //         roomOpenDate = roomOpenDate.substring(5,roomOpenDate.length).replace("-","月").replace(" ","日 ");
+  //       }
+  //       seatOrder = data.obj.seatOrder;
+  //       var storage = window.localStorage;
+  //       storage.setItem("userId", userId);
+  //       storage.setItem("clarity", clarityInner);
+  //       storage.setItem("invitedCode", invitedCode);
+  //       storage.setItem("examNo", examNo);
+  //       storage.setItem("seatOrder", seatOrder);
+  //       //监考已开启，自动进入混流房间
+  //       preJoinRoom(isStart(data.obj.monitorExamRoom.roomOpenDate),data.obj.monitorExamRoom.roomOpenDate, roomOpenDate, 'mixRoom')
+  //     }else{
+  //       layer.alert(data.msg);
+  //     }
+  //   },
+  //   error: function (returndata) {
+  //     // eslint-disable-next-line no-undef
+  //     _error(returndata);
+  //   }
+  // });
 }
 function getRoomId(type) {
   if(!userId){
@@ -341,43 +393,39 @@ function getRoomId(type) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function apiready() {
+async function apiready() {
   // eslint-disable-next-line no-undef
-  uni.getSetting({
-    success(res) {
-      var resultList = {
-        microphone: res.authSetting['scope.record'],
-        camera: res.authSetting['scope.camera']
-      };
-      if (resultList.microphone) {
-        start()
-      } else {
-        layer.confirm('请授权访问摄像头和麦克风来使用监考功能', {
-          btn: ['去授权', '取消'], //按钮
-          title: '授权请求'
-        }, function(){
-          // eslint-disable-next-line no-undef
-          uni.authorize({
-            scope: 'scope.record',
-            success() {
-              // eslint-disable-next-line no-undef
-              uni.authorize({
-                scope: 'scope.camera',
-                success() {
-                  start();
-                }
-              });
-            }
-          });
-          layer.closeAll()
-        }, function() {
-          layer.closeAll()
-          window.history.back()
-        });
-      }
-    }
-  });
-
+  const appAuthorizeSetting = await pUni.getAppAuthorizeSetting();
+  var resultList = {
+    microphone: appAuthorizeSetting.microphoneAuthorized === "authorized",
+    camera: appAuthorizeSetting.cameraAuthorized === "authorized"
+  };
+  if (resultList.microphone) {
+    start()
+  } else {
+    layer.confirm('请授权访问摄像头和麦克风来使用监考功能', {
+      btn: ['去授权', '取消'], //按钮
+      title: '授权请求'
+    }, function(){
+      // eslint-disable-next-line no-undef
+      // pUni.authorize({
+      //   scope: 'scope.record',
+      //   success() {
+      //     // eslint-disable-next-line no-undef
+      //     pUni.authorize({
+      //       scope: 'scope.camera',
+      //       success() {
+      //         start();
+      //       }
+      //     });
+      //   }
+      // });
+      layer.closeAll()
+    }, function() {
+      layer.closeAll()
+      window.history.back()
+    });
+  }
 }
 
 function start() {
@@ -424,16 +472,18 @@ function start() {
     console.info(e)
   }
   trtcRoomListener()
-  var storage = window.localStorage;
-  g_clarity = storage.getItem("clarity");
+  // var storage = window.localStorage;
+  // g_clarity = storage.getItem("clarity");
   openCamera()
   showTitle(true)
-  userId = storage.getItem("userId");
-  invitedCode = storage.getItem("invitedCode");
-  examNo = storage.getItem("examNo");
-  seatOrder = storage.getItem("seatOrder");
-  initTim();
-  getExamInfo(invitedCode)
+  // userId = storage.getItem("userId");
+  // invitedCode = storage.getItem("invitedCode");
+  // examNo = storage.getItem("examNo");
+  // seatOrder = storage.getItem("seatOrder");
+  // initTim();
+  // getExamInfo(invitedCode)
+  joinRoom("mixRoom");
+
 }
 
 //监听事件
@@ -442,7 +492,7 @@ function trtcRoomListener() {
     console.log('- onEnterRoom: ', JSON.stringify(result));
     if (result > 0) {
       // eslint-disable-next-line no-undef
-      uni.showToast({
+      pUni.showToast({
         title: `进房成功，耗时: ${result}ms`,
         icon: 'none',
       });
@@ -454,7 +504,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onWarning', (res) => {
     console.log('- onWarning: ', JSON.stringify(res));
     // eslint-disable-next-line no-undef
-    uni.showToast({
+    pUni.showToast({
       title: `onWarning: ${JSON.stringify(res)}`,
       icon: 'none',
     });
@@ -462,7 +512,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onError', (res) => {
     console.log('- onError: ', JSON.stringify(res));
     // eslint-disable-next-line no-undef
-    uni.showToast({
+    pUni.showToast({
       title: `error: ${JSON.stringify(res)}`,
       icon: 'none',
     });
@@ -470,7 +520,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onFirstAudioFrame', (userId) => {
     console.log('- onFirstAudioFrame: ', JSON.stringify(userId));
     // eslint-disable-next-line no-undef
-    uni.showToast({
+    pUni.showToast({
       title: `onFirstAudioFrame: ${JSON.stringify(userId)}`,
       icon: 'none',
     });
@@ -479,7 +529,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onRemoteUserEnterRoom', (userId) => {
     console.log('- onRemoteUserEnterRoom: ', JSON.stringify(userId));
     // eslint-disable-next-line no-undef
-    uni.showToast({
+    pUni.showToast({
       title: `onRemoteUserEnterRoom: ${JSON.stringify(userId)}`,
       icon: 'none',
     });
@@ -570,7 +620,8 @@ function joinRoom(type) {
     layer.alert("房间号生成错误！");
     return;
   }
-
+  var currentDate = new Date(); // 创建当前日期对象
+  roomId = Math.floor(currentDate.getTime() / 1000);
   tencentTRTC.enterRoom({
     roomId: roomId,
     userId: userId,
@@ -668,7 +719,7 @@ export default {
   },
   methods: {
     async test() {
-      apiready();
+      await apiready();
     }
   }
 }
