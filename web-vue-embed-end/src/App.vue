@@ -14,9 +14,10 @@ let layer = null;
 let TIM = null;
 var userId,examNo,seatOrder,tim, g_clarity;
 var tencentTRTC = null;
-var pUni = null;
-var pPlus = null;
-var pPermision = null;
+// eslint-disable-next-line no-unused-vars
+var _uni = null;
+var plus = null;
+var permision = null;
 var cameraFront = false; // 记录摄像头方向,默认开启后置摄像头
 var sdkAppId = null;
 var userSig = null;
@@ -87,7 +88,6 @@ const uniAppImport = function (uniModule) {
   return new Proxy(state, handler);
 }
 document.addEventListener('UniAppJSBridgeReady', async function () {
-  // eslint-disable-next-line no-undef
   console.log("UniAppJSBridgeReady")
 
   const TrtcCloud = uniAppImport("TrtcCloud");
@@ -95,21 +95,23 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
 
   tencentTRTC = uniAppImport(trtcCloud);
 
-  pUni = uniAppImport("uni");
+  _uni = uniAppImport("uni");
+  _uni.onAccelerometerChange((res) => {
+    alert(JSON.stringify(res))
+  })
 
-  pPlus = uniAppImport("plus");
+  plus = uniAppImport("plus");
 
-  await pPlus["screen.lockOrientation"]('landscape-primary');
+  await plus["screen.lockOrientation"]('landscape-primary');
 
-  pPermision = uniAppImport("permision");
+  permision = uniAppImport("permision");
 
-  const info = await pUni.getSystemInfoSync();
+  const info = await _uni.getSystemInfoSync();
   alert(JSON.stringify(info))
   if (info.platform === 'android') {
-    pPermision.requestAndroidPermission('android.permission.RECORD_AUDIO');
-    pPermision.requestAndroidPermission('android.permission.CAMERA');
+    permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
+    permision.requestAndroidPermission('android.permission.CAMERA');
   }
-
   // todo: 需要支持一下获取变量的能力
 });
 
@@ -268,7 +270,7 @@ function joinRoomShowTitle(openStatus, openTime, joinType) {
   } else if(openStatus == 0){
     statusParam.time = openTime
     // eslint-disable-next-line no-undef
-    pUni.showToast({
+    uni.showToast({
       title: '暂未到开启时间，按照要求摆放设备即可，系统会自动开启',
       icon: 'none',
     });
@@ -370,7 +372,7 @@ function getRoomId(type) {
 // eslint-disable-next-line no-unused-vars
 async function apiready() {
   // eslint-disable-next-line no-undef
-  const appAuthorizeSetting = await pUni.getAppAuthorizeSetting();
+  const appAuthorizeSetting = await uni.getAppAuthorizeSetting();
   var resultList = {
     microphone: appAuthorizeSetting.microphoneAuthorized === "authorized",
     camera: appAuthorizeSetting.cameraAuthorized === "authorized"
@@ -383,11 +385,11 @@ async function apiready() {
       title: '授权请求'
     }, function(){
       // eslint-disable-next-line no-undef
-      // pUni.authorize({
+      // uni.authorize({
       //   scope: 'scope.record',
       //   success() {
       //     // eslint-disable-next-line no-undef
-      //     pUni.authorize({
+      //     uni.authorize({
       //       scope: 'scope.camera',
       //       success() {
       //         start();
@@ -467,7 +469,7 @@ function trtcRoomListener() {
     console.log('- onEnterRoom: ', JSON.stringify(result));
     if (result > 0) {
       // eslint-disable-next-line no-undef
-      pUni.showToast({
+      uni.showToast({
         title: `进房成功，耗时: ${result}ms`,
         icon: 'none',
       });
@@ -479,7 +481,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onWarning', (res) => {
     console.log('- onWarning: ', JSON.stringify(res));
     // eslint-disable-next-line no-undef
-    pUni.showToast({
+    uni.showToast({
       title: `onWarning: ${JSON.stringify(res)}`,
       icon: 'none',
     });
@@ -487,7 +489,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onError', (res) => {
     console.log('- onError: ', JSON.stringify(res));
     // eslint-disable-next-line no-undef
-    pUni.showToast({
+    uni.showToast({
       title: `error: ${JSON.stringify(res)}`,
       icon: 'none',
     });
@@ -495,7 +497,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onFirstAudioFrame', (userId) => {
     console.log('- onFirstAudioFrame: ', JSON.stringify(userId));
     // eslint-disable-next-line no-undef
-    pUni.showToast({
+    uni.showToast({
       title: `onFirstAudioFrame: ${JSON.stringify(userId)}`,
       icon: 'none',
     });
@@ -504,7 +506,7 @@ function trtcRoomListener() {
   tencentTRTC.on('onRemoteUserEnterRoom', (userId) => {
     console.log('- onRemoteUserEnterRoom: ', JSON.stringify(userId));
     // eslint-disable-next-line no-undef
-    pUni.showToast({
+    uni.showToast({
       title: `onRemoteUserEnterRoom: ${JSON.stringify(userId)}`,
       icon: 'none',
     });
