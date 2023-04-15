@@ -30,8 +30,6 @@ g_clarity = 1;
 window.getTRTCConfig = function (ret) {
   sdkAppId = ret.sdkAppId;
   userSig = ret.userSig;
-  alert(sdkAppId)
-  alert(userSig)
 }
 const uniAppImport = function (uniModule) {
   const state = reactive({});
@@ -46,7 +44,7 @@ const uniAppImport = function (uniModule) {
             const uuidFunc1 = getUuid();
             const uuidFunc2 = getUuid();
             window[uuidFunc] = function (ret) {
-              resolve(ret);
+              resolve(JSON.parse(ret));
               window[uuidFunc] = null
             };
             let passParam1 = param1;
@@ -86,11 +84,14 @@ const uniAppImport = function (uniModule) {
 
   return new Proxy(state, handler);
 }
-document.addEventListener('UniAppJSBridgeReady', function() {
+document.addEventListener('UniAppJSBridgeReady', async function () {
   // eslint-disable-next-line no-undef
   console.log("UniAppJSBridgeReady")
 
-  tencentTRTC = uniAppImport("trtcCloud");
+  const TrtcCloud = uniAppImport("TrtcCloud");
+  const trtcCloud = await TrtcCloud.createInstance();
+
+  tencentTRTC = uniAppImport(trtcCloud);
 
   pUni = uniAppImport("uni");
 
