@@ -30,10 +30,10 @@ g_clarity = 1;
 window.getTRTCConfig = function (ret) {
   sdkAppId = ret.sdkAppId;
   userSig = ret.userSig;
+  alert(sdkAppId)
+  alert(userSig)
 }
-document.addEventListener('UniAppJSBridgeReady', function() {
-  // eslint-disable-next-line no-undef
-  console.log("UniAppJSBridgeReady")
+const uniAppImport = function (uniModule) {
   const state = reactive({});
 
   const handler = {
@@ -68,7 +68,7 @@ document.addEventListener('UniAppJSBridgeReady', function() {
             // eslint-disable-next-line no-undef
             uni.postMessage({
               data: {
-                objName: "trtcCloud",
+                objName: uniModule,
                 func: key,
                 params1: passParam1,
                 params2: passParam2,
@@ -84,58 +84,16 @@ document.addEventListener('UniAppJSBridgeReady', function() {
     },
   };
 
-  tencentTRTC = new Proxy(state, handler);
+  return new Proxy(state, handler);
+}
+document.addEventListener('UniAppJSBridgeReady', function() {
+  // eslint-disable-next-line no-undef
+  console.log("UniAppJSBridgeReady")
 
-  const state1 = reactive({});
+  tencentTRTC = uniAppImport("trtcCloud");
 
-  const handler1 = {
-    // eslint-disable-next-line no-unused-vars
-    get(target, key) {
-      if (key !== '__v_isRef') {
-        return function (param1, param2) {
-          return new Promise((resolve) => {
-            const uuidFunc = getUuid();
-            const uuidFunc1 = getUuid();
-            const uuidFunc2 = getUuid();
-            window[uuidFunc] = function (ret) {
-              resolve(ret);
-            };
-            let passParam1 = param1;
-            let passParam2 = param2;
-            // eslint-disable-next-line no-prototype-builtins
-            if(Function.prototype.isPrototypeOf(param1)) {
-              window[uuidFunc1] = function (_param1, _param2) {
-                param1(JSON.parse(_param1), JSON.parse(_param2));
-              };
-              passParam1 = uuidFunc1;
-            }
-            // eslint-disable-next-line no-prototype-builtins
-            if(Function.prototype.isPrototypeOf(param2)) {
-              window[uuidFunc2] = function (_param1, _param2) {
-                param2(JSON.parse(_param1), JSON.parse(_param2));
-              };
-              passParam2 = uuidFunc2;
-            }
-            // eslint-disable-next-line no-undef
-            uni.postMessage({
-              data: {
-                objName: "uni",
-                func: key,
-                params1: passParam1,
-                params2: passParam2,
-                retFunc: uuidFunc,
-                // eslint-disable-next-line no-prototype-builtins
-                paramsCallbackType: [Function.prototype.isPrototypeOf(param1), Function.prototype.isPrototypeOf(param2)]
-              },
-            });
-          });
-        }
-      }
-      return target[key];
-    },
-  };
+  pUni = uniAppImport("uni");
 
-  pUni = new Proxy(state1, handler1);
 });
 
 /**

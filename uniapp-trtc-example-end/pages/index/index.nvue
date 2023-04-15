@@ -43,7 +43,6 @@
 		methods: {
 			handleMessage(evt) {
 				let msg = evt.detail.data[0];
-				console.log(msg);
 				const funcName = msg.func;
 				const objName = msg.objName;
 				const params1 = msg.params1;
@@ -127,7 +126,7 @@
 				})})`);
 			}, 500); 
 			this.trtcCloud = TrtcCloud.createInstance();
-			 
+			
 			this.uni = uni;
 		}
 	}
