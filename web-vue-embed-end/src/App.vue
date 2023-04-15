@@ -15,7 +15,7 @@ let TIM = null;
 var userId,examNo,seatOrder,tim, g_clarity;
 var tencentTRTC = null;
 // eslint-disable-next-line no-unused-vars
-var _uni = null;
+var uni = null;
 var plus = null;
 var permision = null;
 var cameraFront = false; // 记录摄像头方向,默认开启后置摄像头
@@ -67,7 +67,7 @@ const uniAppImport = function (uniModule) {
               passParam2 = uuidFunc2;
             }
             // eslint-disable-next-line no-undef
-            uni.postMessage({
+            _uni.postMessage({
               data: {
                 objName: uniModule,
                 func: key,
@@ -95,8 +95,8 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
 
   tencentTRTC = uniAppImport(trtcCloud);
 
-  _uni = uniAppImport("uni");
-  _uni.onAccelerometerChange((res) => {
+  uni = uniAppImport("uni");
+  uni.onAccelerometerChange((res) => {
     alert(JSON.stringify(res))
   })
 
