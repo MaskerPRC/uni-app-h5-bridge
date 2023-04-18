@@ -57,6 +57,9 @@
 				});
 			},
 			isPrimitive(obj) {
+				if(obj === undefined || obj === null) {
+					return true;
+				}
 				let allNames = Object.getOwnPropertyNames(Object.getPrototypeOf(obj));
 				for (var i = 0; i < allNames.length; i++) {
 					if(!this.primitivePropertyNameMap[allNames[i]]) {
@@ -66,19 +69,31 @@
 				return true; 
 			},
 			handleMessage(evt) {
-
 				let msg = evt.detail.data[0];
-				const funcName = msg.func;
+				const type = msg.type;
+				const commandName = msg.command;
 				const objName = msg.objName;
 				const params1 = msg.params1;
 				const params2 = msg.params2;
 				const retFuncName = msg.retFunc;
 				const paramsCallbackType = msg.paramsCallbackType;
-				const ret = this.remoteCall(objName, funcName, paramsCallbackType, params1, params2);
+				
+				let ret = null;
+				if(type === "VALUE") {
+					// 获取值
+					ret = this.remoteValue(objName, commandName);
+				}
+				else if(type === "CALL") {
+					// 函数调用
+					ret = this.remoteCall(objName, commandName, paramsCallbackType, params1, params2);
+				} 
+				else {
+					return;
+				}  
 				let retJson = ret;
 				if (this.isPrimitive(retJson)) {
 					if (retJson === undefined) {
-						retJson = null;
+						retJson = null; 
 					}
 				} else {
 					retJson = this.getUuid();
@@ -86,6 +101,7 @@
 				}
 				const curWebview = this.$refs.webView;
 				curWebview.evalJS(`window['${retFuncName}'](\`${JSON.stringify(retJson)}\`)`);
+				
 			},
 			remoteCall(objName, func, paramsCallbackType, params1, params2) {
 				let ret = null;
@@ -121,6 +137,15 @@
 				}
 				let code = `
 				ret = this['${objName}'].${func}(${paramsCallbackType[0]? "paramCode1": paramCode1}, ${paramsCallbackType[1]? "paramCode2": paramCode2})
+				`;
+				eval(code);
+				return ret;
+			}, 
+			remoteValue(objName, valueName) {
+				let ret = null;
+				const curWebview = this.$refs.webView;
+				let code = `
+				ret = this['${objName}'].${valueName};
 				`;
 				eval(code);
 				return ret;

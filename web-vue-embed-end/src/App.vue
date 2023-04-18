@@ -36,62 +36,92 @@ window.getTRTCConfig = function (ret) {
 }
 const uniAppImport = function (uniModule) {
   const state = reactive({});
-
-  const handler = {
+  const state1 = reactive(function (){});
+  let shareTempKey = null;
+  const level2Handler = {
+    get(target, key) {
+      if (key === '__VALUE__') {
+        return new Promise((resolve) => {
+          const uuidFunc = getUuid();
+          window[uuidFunc] = function (ret) {
+            resolve(JSON.parse(ret));
+            window[uuidFunc] = null
+          };
+          // eslint-disable-next-line no-undef
+          _uni.postMessage({
+            data: {
+              type: "VALUE",
+              objName: uniModule,
+              command: shareTempKey,
+              retFunc: uuidFunc
+            },
+          });
+        });
+      }
+      return target[key];
+    },
+    apply(a,b,c) {
+      let param1 = c[0];
+      let param2 = c[1];
+      return new Promise((resolve) => {
+        const uuidFunc = getUuid();
+        const uuidFunc1 = getUuid();
+        const uuidFunc2 = getUuid();
+        window[uuidFunc] = function (ret) {
+          resolve(JSON.parse(ret));
+          window[uuidFunc] = null
+        };
+        let passParam1 = param1;
+        let passParam2 = param2;
+        // eslint-disable-next-line no-prototype-builtins
+        if(Function.prototype.isPrototypeOf(param1)) {
+          window[uuidFunc1] = function (_param1, _param2) {
+            param1(JSON.parse(_param1), JSON.parse(_param2));
+          };
+          passParam1 = uuidFunc1;
+        }
+        // eslint-disable-next-line no-prototype-builtins
+        if(Function.prototype.isPrototypeOf(param2)) {
+          window[uuidFunc2] = function (_param1, _param2) {
+            param2(JSON.parse(_param1), JSON.parse(_param2));
+          };
+          passParam2 = uuidFunc2;
+        }
+        // eslint-disable-next-line no-undef
+        _uni.postMessage({
+          data: {
+            type: "CALL",
+            objName: uniModule,
+            command: shareTempKey,
+            params1: passParam1,
+            params2: passParam2,
+            retFunc: uuidFunc,
+            // eslint-disable-next-line no-prototype-builtins
+            paramsCallbackType: [Function.prototype.isPrototypeOf(param1), Function.prototype.isPrototypeOf(param2)]
+          },
+        });
+      });
+    }
+  };
+  const level1Handler = {
     // eslint-disable-next-line no-unused-vars
     get(target, key) {
       if (key !== '__v_isRef') {
-        return function (param1, param2) {
-          return new Promise((resolve) => {
-            const uuidFunc = getUuid();
-            const uuidFunc1 = getUuid();
-            const uuidFunc2 = getUuid();
-            window[uuidFunc] = function (ret) {
-              resolve(JSON.parse(ret));
-              window[uuidFunc] = null
-            };
-            let passParam1 = param1;
-            let passParam2 = param2;
-            // eslint-disable-next-line no-prototype-builtins
-            if(Function.prototype.isPrototypeOf(param1)) {
-              window[uuidFunc1] = function (_param1, _param2) {
-                param1(JSON.parse(_param1), JSON.parse(_param2));
-              };
-              passParam1 = uuidFunc1;
-            }
-            // eslint-disable-next-line no-prototype-builtins
-            if(Function.prototype.isPrototypeOf(param2)) {
-              window[uuidFunc2] = function (_param1, _param2) {
-                param2(JSON.parse(_param1), JSON.parse(_param2));
-              };
-              passParam2 = uuidFunc2;
-            }
-            // eslint-disable-next-line no-undef
-            _uni.postMessage({
-              data: {
-                objName: uniModule,
-                func: key,
-                params1: passParam1,
-                params2: passParam2,
-                retFunc: uuidFunc,
-                // eslint-disable-next-line no-prototype-builtins
-                paramsCallbackType: [Function.prototype.isPrototypeOf(param1), Function.prototype.isPrototypeOf(param2)]
-              },
-            });
-          });
-        }
+        shareTempKey = key;
+        return new Proxy(state1, level2Handler);
       }
       return target[key];
     },
   };
 
-  return new Proxy(state, handler);
+
+  return new Proxy(state, level1Handler);
 }
 document.addEventListener('UniAppJSBridgeReady', async function () {
   console.log("UniAppJSBridgeReady")
 
   const TrtcCloud = uniAppImport("TrtcCloud");
-  const trtcCloud = await TrtcCloud.createInstance();
+  let trtcCloud = await TrtcCloud.createInstance(1,32,5);
 
   tencentTRTC = uniAppImport(trtcCloud);
 
@@ -103,10 +133,12 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
   plus = uniAppImport("plus");
 
   await plus["screen.lockOrientation"]('landscape-primary');
+  const a = await plus["device.model"].__VALUE__;
+  alert(JSON.stringify(a))
 
   permision = uniAppImport("permision");
 
-  const info = await _uni.getSystemInfoSync();
+  const info = await uni.getSystemInfoSync();
   alert(JSON.stringify(info))
   if (info.platform === 'android') {
     permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
@@ -373,6 +405,7 @@ function getRoomId(type) {
 async function apiready() {
   // eslint-disable-next-line no-undef
   const appAuthorizeSetting = await uni.getAppAuthorizeSetting();
+
   var resultList = {
     microphone: appAuthorizeSetting.microphoneAuthorized === "authorized",
     camera: appAuthorizeSetting.cameraAuthorized === "authorized"
