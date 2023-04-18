@@ -12,6 +12,7 @@ import {reactive} from "vue";
 import {getUuid} from "@/uuid";
 /*global layer*/
 /*global TIM*/
+/*global _uni*/  // 原本是uni，为了不产生歧义，改为_uni
 var userId,examNo,seatOrder,tim, g_clarity;
 var tencentTRTC = null;
 // eslint-disable-next-line no-unused-vars
@@ -57,6 +58,14 @@ const uniAppImport = function (uniModule) {
       }
       return target[key];
     },
+    /**
+     * todo: 需要实现对此类型调用的支持
+     * uni.openAppAuthorizeSetting({
+     *   success (res) {
+     *     console.log(res)
+     *   }
+     * })
+     */
     apply(a,b,c) {
       let param1 = c[0];
       let param2 = c[1];
@@ -421,19 +430,11 @@ async function apiready() {
       btn: ['去授权', '取消'], //按钮
       title: '授权请求'
     }, function(){
-      // eslint-disable-next-line no-undef
-      // uni.authorize({
-      //   scope: 'scope.record',
-      //   success() {
-      //     // eslint-disable-next-line no-undef
-      //     uni.authorize({
-      //       scope: 'scope.camera',
-      //       success() {
-      //         start();
-      //       }
-      //     });
-      //   }
-      // });
+      uni.openAppAuthorizeSetting({
+        success (res) {
+          alert("fd")
+        }
+      })
       layer.closeAll()
     }, function() {
       layer.closeAll()
