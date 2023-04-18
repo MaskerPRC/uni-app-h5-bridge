@@ -37,26 +37,40 @@ window.getTRTCConfig = function (ret) {
 const uniAppImport = function (uniModule) {
   const state = reactive({});
   const state1 = reactive(function (){});
-  let shareTempKey = null;
+  let shareTempKeyArr = [];
+  let shareTempKeyString = "";
   const level2Handler = {
     get(target, key) {
-      if (key === '__VALUE__') {
-        return new Promise((resolve) => {
-          const uuidFunc = getUuid();
-          window[uuidFunc] = function (ret) {
-            resolve(JSON.parse(ret));
-            window[uuidFunc] = null
-          };
-          // eslint-disable-next-line no-undef
-          _uni.postMessage({
-            data: {
-              type: "VALUE",
-              objName: uniModule,
-              command: shareTempKey,
-              retFunc: uuidFunc
-            },
+
+  };
+  const level1Handler = {
+    // eslint-disable-next-line no-unused-vars
+    get(target, key) {
+      if (key !== '__v_isRef') {
+        if (key === '__VALUE__') {
+          return new Promise((resolve) => {
+            const uuidFunc = getUuid();
+            window[uuidFunc] = function (ret) {
+              resolve(JSON.parse(ret));
+              window[uuidFunc] = null
+            };
+            // eslint-disable-next-line no-undef
+            _uni.postMessage({
+              data: {
+                type: "VALUE",
+                objName: uniModule,
+                command: shareTempKey,
+                retFunc: uuidFunc
+              },
+            });
           });
-        });
+        }
+        return target[key];
+      }
+      else {
+        shareTempKeyString += "[\`"+key+"\`]";
+        shareTempKeyArr.push(key);
+        return new Proxy(state1, level1Handler);
       }
       return target[key];
     },
@@ -102,16 +116,6 @@ const uniAppImport = function (uniModule) {
         });
       });
     }
-  };
-  const level1Handler = {
-    // eslint-disable-next-line no-unused-vars
-    get(target, key) {
-      if (key !== '__v_isRef') {
-        shareTempKey = key;
-        return new Proxy(state1, level2Handler);
-      }
-      return target[key];
-    },
   };
 
 
