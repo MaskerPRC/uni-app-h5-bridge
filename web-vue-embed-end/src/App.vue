@@ -10,8 +10,8 @@
 <script>
 import {reactive} from "vue";
 import {getUuid} from "@/uuid";
-let layer = null;
-let TIM = null;
+/*global layer*/
+/*global TIM*/
 var userId,examNo,seatOrder,tim, g_clarity;
 var tencentTRTC = null;
 // eslint-disable-next-line no-unused-vars
@@ -131,12 +131,12 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
 
   await plus["screen.lockOrientation"]('landscape-primary');
   const a = await plus["device.model"].__VALUE__;
-  alert(JSON.stringify(a))
+  // alert(JSON.stringify(a))
 
   permision = uniAppImport("permision");
 
   const info = await uni.getSystemInfoSync();
-  alert(JSON.stringify(info))
+  // alert(JSON.stringify(info))
   if (info.platform === 'android') {
     permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
     permision.requestAndroidPermission('android.permission.CAMERA');
@@ -146,8 +146,8 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
 
   sdkAppId = await nvue.sdkAppId.__VALUE__;
   userSig = await nvue.userSig.__VALUE__;
-  alert(JSON.stringify(sdkAppId))
-  alert(JSON.stringify(userSig))
+  // alert(JSON.stringify(sdkAppId))
+  // alert(JSON.stringify(userSig))
 });
 
 /**
@@ -413,6 +413,7 @@ async function apiready() {
     microphone: appAuthorizeSetting.microphoneAuthorized === "authorized",
     camera: appAuthorizeSetting.cameraAuthorized === "authorized"
   };
+  alert(JSON.stringify(resultList))
   if (resultList.microphone) {
     start()
   } else {
