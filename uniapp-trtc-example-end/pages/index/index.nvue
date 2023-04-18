@@ -43,10 +43,11 @@
 		},
 		created() {
 			const primitiveType = [[],{},1,"",true];
-			for(let type in primitiveType) {
+			for(let index in primitiveType) {
+				let type = primitiveType[index];
 				let _this = this;
 				Object.getOwnPropertyNames(Object.getPrototypeOf(type)).forEach(name=>_this.primitivePropertyNameMap[name] = true);
-			}
+			} 
 		},
 		methods: {
 			getUuid() {
@@ -54,7 +55,7 @@
 					var r = (Math.random() * 16) | 0,
 						v = c == 'x' ? r : (r & 0x3) | 0x8;
 					return v.toString(16);
-				});
+				}); 
 			},
 			isPrimitive(obj) {
 				if(obj === undefined || obj === null) {
@@ -172,22 +173,16 @@
 					icon: 'none'
 				});
 			}
-			const _this = this;
 			const curWebview = this.$refs.webView;
-			setTimeout(() => {
-				curWebview.evalJS(`window['getTRTCConfig'](${JSON.stringify({
-					sdkAppId: _this.sdkAppId,
-					userSig: _this.userSig,
-				})})`);
-			}, 500);
 			this.TrtcCloud = TrtcCloud;
 			this.uni = uni;
 			this.plus = plus;
 			this.permision = permision;
+			this.nvue = this;
 		}
-	}
+	} 
 </script>
-
+ 
 <style>
 
 </style>
