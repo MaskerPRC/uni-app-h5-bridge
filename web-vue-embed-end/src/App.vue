@@ -97,7 +97,7 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
 
   uni = uniAppImport("uni");
   uni.onAccelerometerChange((res) => {
-    alert(JSON.stringify(res))
+    // alert(JSON.stringify(res))
   })
 
   plus = uniAppImport("plus");
