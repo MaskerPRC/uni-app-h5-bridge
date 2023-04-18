@@ -17,6 +17,7 @@ var tencentTRTC = null;
 // eslint-disable-next-line no-unused-vars
 var uni = null;
 var plus = null;
+var nvue = null;
 var permision = null;
 var cameraFront = false; // 记录摄像头方向,默认开启后置摄像头
 var sdkAppId = null;
@@ -30,10 +31,6 @@ g_clarity = 1;
  * 绑定uniapp原生与页面的逻辑
  * todo: 需要集成为js绑定库
  */
-window.getTRTCConfig = function (ret) {
-  sdkAppId = ret.sdkAppId;
-  userSig = ret.userSig;
-}
 const uniAppImport = function (uniModule) {
   const state = reactive({});
   const state1 = reactive(function (){});
@@ -144,7 +141,13 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
     permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
     permision.requestAndroidPermission('android.permission.CAMERA');
   }
-  // todo: 需要支持一下获取变量的能力
+
+  nvue = uniAppImport("nvue");
+
+  sdkAppId = await nvue.sdkAppId.__VALUE__;
+  userSig = await nvue.userSig.__VALUE__;
+  alert(JSON.stringify(sdkAppId))
+  alert(JSON.stringify(userSig))
 });
 
 /**
