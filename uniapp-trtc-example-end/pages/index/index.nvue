@@ -13,7 +13,7 @@
 	import TrtcCloud from '@/TrtcCloud/lib/index';
 	import {
 		TRTCAppScene,
-		TRTCVideoStreamType,
+		TRTCVideoStreamType, 
 		TRTCAudioRoute,
 		TRTCAudioQuality
 	} from '@/TrtcCloud/lib/TrtcDefines';
@@ -22,7 +22,7 @@
 	import TrtcRemoteView from '@/TrtcCloud/view/TrtcRemoteView';
 	const roomId = Math.floor(Math.random() * 100000).toString();
 	const userId = 'user_' + Math.floor(Math.random() * 100000).toString();
-
+ 
 	export default {
 		components: {
 			TrtcLocalView: TrtcLocalView,
@@ -37,7 +37,15 @@
 				},
 				trtcCloud: null,
 				userId: "uye",
-				height: 0
+				height: 0,
+				primitivePropertyNameMap: new Map()
+			}
+		},
+		created() {
+			const primitiveType = [[],{},1,"",true];
+			for(let type in primitiveType) {
+				let _this = this;
+				Object.getOwnPropertyNames(Object.getPrototypeOf(type)).forEach(name=>_this.primitivePropertyNameMap[name] = true);
 			}
 		},
 		methods: {
@@ -48,19 +56,17 @@
 					return v.toString(16);
 				});
 			},
-			// todo: 这里的判断大概率是错的
 			isPrimitive(obj) {
-				if (!obj /* null 或 undefined */|| Number.isNaN(obj)/* NaN*/) {
-					return true;
+				let allNames = Object.getOwnPropertyNames(Object.getPrototypeOf(obj));
+				for (var i = 0; i < allNames.length; i++) {
+					if(!this.primitivePropertyNameMap[allNames[i]]) {
+						return false;
+					}
 				}
-				const proto = Object.getPrototypeOf(obj);
-				return proto === Object.prototype ||
-					proto === Array.prototype ||
-					proto === String.prototype ||
-					proto === Number.prototype ||
-					proto === Boolean.prototype;
+				return true; 
 			},
 			handleMessage(evt) {
+
 				let msg = evt.detail.data[0];
 				const funcName = msg.func;
 				const objName = msg.objName;
@@ -78,7 +84,6 @@
 					retJson = this.getUuid();
 					this[retJson] = ret;
 				}
-
 				const curWebview = this.$refs.webView;
 				curWebview.evalJS(`window['${retFuncName}'](\`${JSON.stringify(retJson)}\`)`);
 			},
