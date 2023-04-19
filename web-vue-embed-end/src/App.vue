@@ -430,11 +430,22 @@ async function apiready() {
       btn: ['去授权', '取消'], //按钮
       title: '授权请求'
     }, function(){
-      uni.openAppAuthorizeSetting({
-        success (res) {
-          alert("fd")
+      plus['android.requestPermissions'](['android.permission.CAMERA','android.permission.RECORD_AUDIO'], function(e){
+        alert(JSON.stringify(e))
+        if(e.deniedAlways.length>0){    //权限被永久拒绝
+          // 弹出提示框解释为何需要权限，引导用户打开设置页面开启
+          alert('权限被永久拒绝'+e.deniedAlways.toString());
         }
-      })
+        if(e.deniedPresent.length>0){   //权限被临时拒绝
+          // 弹出提示框解释为何需要权限，可再次调用plus.android.requestPermissions申请权限
+          alert('权限被临时拒绝'+e.deniedPresent.toString());
+        }
+        if(e.granted.length>0){ //权限被允许
+          alert('权限被允许'+e.granted.toString());
+        }
+      }, function(e){
+        console.log('Request Permissions error:'+JSON.stringify(e));
+      });
       layer.closeAll()
     }, function() {
       layer.closeAll()
