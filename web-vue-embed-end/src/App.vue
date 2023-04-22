@@ -14,12 +14,12 @@ import {getUuid} from "@/uuid";
 /*global TIM*/
 /*global _uni*/  // 原本是uni，为了不产生歧义，改为_uni
 var userId,examNo,seatOrder,tim, g_clarity;
-var tencentTRTC = null;
+window.tencentTRTC = null;
 // eslint-disable-next-line no-unused-vars
-var uni = null;
-var plus = null;
-var nvue = null;
-var permision = null;
+window.uni = null;
+window.plus = null;
+window.nvue = null;
+window.permision = null;
 var cameraFront = false; // 记录摄像头方向,默认开启后置摄像头
 var sdkAppId = null;
 var userSig = null;
@@ -27,6 +27,12 @@ userId = "uye";
 examNo = "01";
 seatOrder = "01";
 g_clarity = 1;
+
+window.onMessageFromUni = function (retFuncName, jsonInfo1, jsonInfo2) {
+  if (window.hasOwnProperty(retFuncName)) {
+    window[retFuncName](jsonInfo1, jsonInfo2);
+  }
+}
 
 /**
  * 绑定uniapp原生与页面的逻辑
@@ -129,32 +135,32 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
   const TrtcCloud = uniAppImport("TrtcCloud");
   let trtcCloud = await TrtcCloud.createInstance(1,32,5);
 
-  tencentTRTC = uniAppImport(trtcCloud);
+  window.tencentTRTC = uniAppImport(trtcCloud);
 
-  uni = uniAppImport("uni");
-  uni.onAccelerometerChange((res) => {
+  window.uni = uniAppImport("uni");
+  window.uni.onAccelerometerChange((res) => {
     // alert(JSON.stringify(res))
   })
 
-  plus = uniAppImport("plus");
+  window.plus = uniAppImport("plus");
 
-  await plus["screen.lockOrientation"]('landscape-primary');
-  const a = await plus["device.model"].__VALUE__;
+  await window.plus["screen.lockOrientation"]('landscape-primary');
+  const a = await window.plus["device.model"].__VALUE__;
   // alert(JSON.stringify(a))
 
-  permision = uniAppImport("permision");
+  window.permision = uniAppImport("permision");
 
-  const info = await uni.getSystemInfoSync();
+  const info = await window.uni.getSystemInfoSync();
   // alert(JSON.stringify(info))
   if (info.platform === 'android') {
-    permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
-    permision.requestAndroidPermission('android.permission.CAMERA');
+    window.permision.requestAndroidPermission('android.permission.RECORD_AUDIO');
+    window.permision.requestAndroidPermission('android.permission.CAMERA');
   }
 
-  nvue = uniAppImport("nvue");
+  window.nvue = uniAppImport("nvue");
 
-  sdkAppId = await nvue.sdkAppId.__VALUE__;
-  userSig = await nvue.userSig.__VALUE__;
+  sdkAppId = await window.nvue.sdkAppId.__VALUE__;
+  userSig = await window.nvue.userSig.__VALUE__;
   // alert(JSON.stringify(sdkAppId))
   // alert(JSON.stringify(userSig))
 });

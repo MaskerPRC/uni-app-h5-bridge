@@ -52,7 +52,7 @@
 		methods: {
 			getUuid() {
 				return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
-					var r = (Math.random() * 16) | 0,
+					var r = (Math.random() * 16) | 0;
 						v = c == 'x' ? r : (r & 0x3) | 0x8;
 					return v.toString(16);
 				}); 
@@ -101,7 +101,7 @@
 					this[retJson] = ret;
 				}
 				const curWebview = this.$refs.webView;
-				curWebview.evalJS(`window['${retFuncName}'](\`${JSON.stringify(retJson)}\`)`);
+				curWebview.evalJS(`window.hasOwnProperty('${retFuncName}') && window.onMessageFromUni('${retFuncName}', \`${JSON.stringify(retJson)}\`)`);
 				
 			},
 			remoteCall(objName, func, paramsCallbackType, params1, params2) {
@@ -119,7 +119,7 @@
 							param2 = null;
 						}
 						curWebview.evalJS(
-							`window['${params1}'](\`${JSON.stringify(param1)}\`,\`${JSON.stringify(param2)}\`)`);
+							`window.hasOwnProperty('${params1}') && window.onMessageFromUni('${params1}', \`${JSON.stringify(param1)}\`,\`${JSON.stringify(param2)}\`)`);
 					}
 				}
 				let paramCode2 = JSON.stringify(params2);
@@ -133,7 +133,7 @@
 							param2 = null;
 						}
 						curWebview.evalJS(
-							`window['${params2}'](\`${JSON.stringify(param1)}\`,\`${JSON.stringify(param2)}\`)`);
+							`window.hasOwnProperty('${params2}') && window.onMessageFromUni('${params2}', \`${JSON.stringify(param1)}\`,\`${JSON.stringify(param2)}\`)`);
 					}
 				}
 				let code = `
