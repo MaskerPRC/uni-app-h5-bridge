@@ -38,7 +38,7 @@ window.onMessageFromUni = function (retFuncName, jsonInfo1, jsonInfo2) {
  * 绑定uniapp原生与页面的逻辑
  * todo: 需要集成为js绑定库
  */
-const uniAppImport = function (uniModule) {
+window._R = function (uniModule) {
   const state = reactive({});
   const state1 = reactive(function (){});
   let shareTempKey = null;
@@ -131,24 +131,22 @@ const uniAppImport = function (uniModule) {
 }
 document.addEventListener('UniAppJSBridgeReady', async function () {
   console.log("UniAppJSBridgeReady")
+  // 远程调用的非可序列化对象，返回值需要使用RR包裹
+  const TrtcCloud = _R("TrtcCloud");
+  window.tencentTRTC = _R(await TrtcCloud.createInstance(1,32,5));
 
-  const TrtcCloud = uniAppImport("TrtcCloud");
-  let trtcCloud = await TrtcCloud.createInstance(1,32,5);
-
-  window.tencentTRTC = uniAppImport(trtcCloud);
-
-  window.uni = uniAppImport("uni");
+  window.uni = _R("uni");
   window.uni.onAccelerometerChange((res) => {
     // alert(JSON.stringify(res))
   })
 
-  window.plus = uniAppImport("plus");
+  window.plus = _R("plus");
 
   await window.plus["screen.lockOrientation"]('landscape-primary');
   const a = await window.plus["device.model"].__VALUE__;
   // alert(JSON.stringify(a))
 
-  window.permision = uniAppImport("permision");
+  window.permision = _R("permision");
 
   const info = await window.uni.getSystemInfoSync();
   // alert(JSON.stringify(info))
@@ -157,7 +155,7 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
     window.permision.requestAndroidPermission('android.permission.CAMERA');
   }
 
-  window.nvue = uniAppImport("nvue");
+  window.nvue = _R("nvue");
 
   sdkAppId = await window.nvue.sdkAppId.__VALUE__;
   userSig = await window.nvue.userSig.__VALUE__;
@@ -429,33 +427,20 @@ async function apiready() {
     camera: appAuthorizeSetting.cameraAuthorized === "authorized"
   };
   alert(JSON.stringify(resultList))
-  if (resultList.microphone) {
+  if (resultList.microphone && resultList.camera) {
     start()
   } else {
     layer.confirm('请授权访问摄像头和麦克风来使用监考功能', {
       btn: ['去授权', '取消'], //按钮
       title: '授权请求'
-    }, function(){
-      plus['android.requestPermissions'](['android.permission.CAMERA','android.permission.RECORD_AUDIO'], function(e){
-        alert(JSON.stringify(e))
-        if(e.deniedAlways.length>0){    //权限被永久拒绝
-          // 弹出提示框解释为何需要权限，引导用户打开设置页面开启
-          alert('权限被永久拒绝'+e.deniedAlways.toString());
-        }
-        if(e.deniedPresent.length>0){   //权限被临时拒绝
-          // 弹出提示框解释为何需要权限，可再次调用plus.android.requestPermissions申请权限
-          alert('权限被临时拒绝'+e.deniedPresent.toString());
-        }
-        if(e.granted.length>0){ //权限被允许
-          alert('权限被允许'+e.granted.toString());
-        }
-      }, function(e){
-        console.log('Request Permissions error:'+JSON.stringify(e));
-      });
+    }, async function () {
+      let ret = await _R(await permision.requestAndroidPermission('android.permission.RECORD_AUDIO'))
+      if (ret === 1) {
+        ret = await _R(await permision.requestAndroidPermission('android.permission.CAMERA'))
+      }
       layer.closeAll()
     }, function() {
       layer.closeAll()
-      window.history.back()
     });
   }
 }
