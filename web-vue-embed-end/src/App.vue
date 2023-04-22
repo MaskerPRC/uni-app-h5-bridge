@@ -332,42 +332,42 @@ function joinRoomShowTitle(openStatus, openTime, joinType) {
 }
 
 // eslint-disable-next-line no-unused-vars
-function getExamInfo(invitedCode) {
+function getExamInfo(invitedCode, callback) {
   // eslint-disable-next-line no-undef
-  // $.ajax({
-  //   url: '/openBeta/user/stuLogin',
-  //   async: false,
-  //   data: {invitedCode: invitedCode},
-  //   dataType: "json",
-  //   type: "POST",
-  //   success: function (data) {
-  //     var userId,examNo,seatOrder,clarityInner;
-  //     if(data.success){
-  //       userId = data.obj.userId;
-  //       clarityInner = data.obj.clarity;
-  //       examNo = data.obj.monitorExamRoom.examNo;
-  //       roomOpenDate = data.obj.monitorExamRoom.roomOpenDate;
-  //       if(roomOpenDate){
-  //         roomOpenDate = roomOpenDate.substring(5,roomOpenDate.length).replace("-","月").replace(" ","日 ");
-  //       }
-  //       seatOrder = data.obj.seatOrder;
-  //       var storage = window.localStorage;
-  //       storage.setItem("userId", userId);
-  //       storage.setItem("clarity", clarityInner);
-  //       storage.setItem("invitedCode", invitedCode);
-  //       storage.setItem("examNo", examNo);
-  //       storage.setItem("seatOrder", seatOrder);
-  //       //监考已开启，自动进入混流房间
-  //       preJoinRoom(isStart(data.obj.monitorExamRoom.roomOpenDate),data.obj.monitorExamRoom.roomOpenDate, roomOpenDate, 'mixRoom')
-  //     }else{
-  //       layer.alert(data.msg);
-  //     }
-  //   },
-  //   error: function (returndata) {
-  //     // eslint-disable-next-line no-undef
-  //     _error(returndata);
-  //   }
-  // });
+  $.ajax({
+    url: '/openBeta/user/stuLogin',
+    async: false,
+    data: {invitedCode: invitedCode},
+    dataType: "json",
+    type: "POST",
+    success: function (data) {
+      var userId,examNo,seatOrder,clarityInner, roomOpenDate;
+      if(data.success){
+        userId = data.obj.userId;
+        clarityInner = data.obj.clarity;
+        examNo = data.obj.monitorExamRoom.examNo;
+        roomOpenDate = data.obj.monitorExamRoom.roomOpenDate;
+        if(roomOpenDate){
+          roomOpenDate = roomOpenDate.substring(5,roomOpenDate.length).replace("-","月").replace(" ","日 ");
+        }
+        seatOrder = data.obj.seatOrder;
+        var storage = window.localStorage;
+        storage.setItem("userId", userId);
+        storage.setItem("clarity", clarityInner);
+        storage.setItem("invitedCode", invitedCode);
+        storage.setItem("examNo", examNo);
+        storage.setItem("seatOrder", seatOrder);
+        //监考已开启，自动进入混流房间
+        preJoinRoom(isStart(data.obj.monitorExamRoom.roomOpenDate),data.obj.monitorExamRoom.roomOpenDate, roomOpenDate, 'mixRoom')
+      }else{
+        layer.alert(data.msg);
+      }
+    },
+    error: function (returndata) {
+      // eslint-disable-next-line no-undef
+      _error(returndata);
+    }
+  });
 }
 function getRoomId(type) {
   if(!userId){
