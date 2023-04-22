@@ -74,10 +74,8 @@
 				const type = msg.type;
 				const commandName = msg.command;
 				const objName = msg.objName;
-				const params1 = msg.params1;
-				const params2 = msg.params2;
+				const params = msg.params;
 				const retFuncName = msg.retFunc;
-				const paramsCallbackType = msg.paramsCallbackType;
 				
 				let ret = null;
 				if(type === "VALUE") {
@@ -86,7 +84,7 @@
 				}
 				else if(type === "CALL") {
 					// 函数调用
-					ret = this.remoteCall(objName, commandName, paramsCallbackType, params1, params2);
+					ret = this.remoteCall(objName, commandName, params);
 				} 
 				else {
 					return;
@@ -104,44 +102,61 @@
 				curWebview.evalJS(`window.hasOwnProperty('${retFuncName}') && window.onMessageFromUni('${retFuncName}', \`${JSON.stringify(retJson)}\`)`);
 				
 			},
-			remoteCall(objName, func, paramsCallbackType, params1, params2) {
+			setValueByPath(treeParams, path, value) {
+				if(path.length === 1) {
+					treeParams[path[0]] = value;
+				}
+				else {
+					this.setValueByPath(treeParams[path[0]], path.slice(1), value);
+				}
+			},
+			remoteCall(objName, func, params) {
 				let ret = null;
 
-				let paramCode1 = JSON.stringify(params1);
 				const curWebview = this.$refs.webView;
-				if (paramsCallbackType[0]) {
-					// 参数1是函数，则需要创建函数代码
-					paramCode1 = function(param1, param2) {
-						if (param1 === undefined) {
-							param1 = null;
+				
+				// 使用平面的参数数组，生成tree状的
+				let treeParams = {};
+				for(const typeKey in params) {
+					const param = params[typeKey];
+					const paramPath = param[0];
+					const paramType = param[1];
+					const paramValue = param[2];
+					if (paramType === "callback") {
+						// 参数是函数，则需要创建函数代码
+						const paramCodeN = function(_param1, _param2) {
+							if (_param1 === undefined) {
+								_param1 = null;
+							}
+							if (_param2 === undefined) {
+								_param2 = null;
+							}
+							curWebview.evalJS(
+								`window.hasOwnProperty('${paramValue}') && window.onMessageFromUni('${paramValue}', \`${JSON.stringify(_param1)}\`,\`${JSON.stringify(_param2)}\`)`);
 						}
-						if (param2 === undefined) {
-							param2 = null;
-						}
-						curWebview.evalJS(
-							`window.hasOwnProperty('${params1}') && window.onMessageFromUni('${params1}', \`${JSON.stringify(param1)}\`,\`${JSON.stringify(param2)}\`)`);
+						// 将函数插入到treeParam中
+						this.setValueByPath(treeParams, paramPath, paramCodeN);
+					} 
+					else {
+						// 将数据插入到treeParam中
+						this.setValueByPath(treeParams, paramPath, paramValue);
 					}
 				}
-				let paramCode2 = JSON.stringify(params2);
-				if (paramsCallbackType[1]) {
-					// 参数2是函数，则需要创建函数代码
-					paramCode2 = function(param1, param2) {
-						if (param1 === undefined) {
-							param1 = null;
-						}
-						if (param2 === undefined) {
-							param2 = null;
-						}
-						curWebview.evalJS(
-							`window.hasOwnProperty('${params2}') && window.onMessageFromUni('${params2}', \`${JSON.stringify(param1)}\`,\`${JSON.stringify(param2)}\`)`);
+				
+				let paramCode = "";
+				for(const key in treeParams) {
+					if(key !== "0") {
+						paramCode += `, `;
 					}
+					paramCode += `treeParams[${key}]`;
 				}
+				
 				let code = `
-				ret = this['${objName}'].${func}(${paramsCallbackType[0]? "paramCode1": paramCode1}, ${paramsCallbackType[1]? "paramCode2": paramCode2})
-				`;
+				ret = this['${objName}'].${func}(${paramCode});
+				`; 
 				eval(code);
 				return ret;
-			}, 
+			},
 			remoteValue(objName, valueName) {
 				let ret = null;
 				const curWebview = this.$refs.webView;

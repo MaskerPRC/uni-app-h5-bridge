@@ -38,7 +38,7 @@ window.onMessageFromUni = function (retFuncName, jsonInfo1, jsonInfo2) {
  * 绑定uniapp原生与页面的逻辑
  * todo: 需要集成为js绑定库
  */
-window._R = function (uniModule) {
+window.$R2 = function (uniModule) {
   const state = reactive({});
   const state1 = reactive(function (){});
   let shareTempKey = null;
@@ -73,31 +73,52 @@ window._R = function (uniModule) {
      * })
      */
     apply(a,b,c) {
-      let param1 = c[0];
-      let param2 = c[1];
       return new Promise((resolve) => {
         const uuidFunc = getUuid();
-        const uuidFunc1 = getUuid();
-        const uuidFunc2 = getUuid();
         window[uuidFunc] = function (ret) {
           resolve(JSON.parse(ret));
           window[uuidFunc] = null
         };
-        let passParam1 = param1;
-        let passParam2 = param2;
-        // eslint-disable-next-line no-prototype-builtins
-        if(Function.prototype.isPrototypeOf(param1)) {
-          window[uuidFunc1] = function (_param1, _param2) {
-            param1(JSON.parse(_param1), JSON.parse(_param2));
-          };
-          passParam1 = uuidFunc1;
-        }
-        // eslint-disable-next-line no-prototype-builtins
-        if(Function.prototype.isPrototypeOf(param2)) {
-          window[uuidFunc2] = function (_param1, _param2) {
-            param2(JSON.parse(_param1), JSON.parse(_param2));
-          };
-          passParam2 = uuidFunc2;
+
+        let flatParams = [];
+        for (const cKey in c) {
+          const param = c[cKey];
+          // eslint-disable-next-line no-prototype-builtins
+          if(Function.prototype.isPrototypeOf(param)) {
+            const uuidFuncParam = getUuid();
+            window[uuidFuncParam] = function (_param1, _param2) {
+              param(JSON.parse(_param1), JSON.parse(_param2));
+            };
+            flatParams.push([[cKey], 'callback', uuidFuncParam]);
+          }
+          else {
+            // 根据 flatParams 遍历内部数据，生成一个数组，结构为 ['对象key路径', '类型', 序列化值]
+            // 目前只支持一层对象形式
+            // 如果是对象形式
+            if(param instanceof Object) {
+              const params = param;
+              flatParams.push([[cKey], "value", {}]);
+              for (const key in params) {
+                const level2Value = params[key];
+                const curKeyPath = [cKey,key];
+                // 如果value为函数的处理
+                if(Function.prototype.isPrototypeOf(level2Value)) {
+                  const uuidFuncParam = getUuid();
+                  window[uuidFuncParam] = function (_param1, _param2) {
+                    level2Value(JSON.parse(_param1), JSON.parse(_param2));
+                  };
+                  flatParams.push([curKeyPath, 'callback', uuidFuncParam]);
+                }
+                else {
+                  flatParams.push([curKeyPath, 'value', level2Value]);
+                }
+              }
+            }
+            else {
+              // 如果是常量形式
+              flatParams.push([[cKey], "value", param]);
+            }
+          }
         }
         // eslint-disable-next-line no-undef
         _uni.postMessage({
@@ -105,11 +126,8 @@ window._R = function (uniModule) {
             type: "CALL",
             objName: uniModule,
             command: shareTempKey,
-            params1: passParam1,
-            params2: passParam2,
+            params: flatParams,
             retFunc: uuidFunc,
-            // eslint-disable-next-line no-prototype-builtins
-            paramsCallbackType: [Function.prototype.isPrototypeOf(param1), Function.prototype.isPrototypeOf(param2)]
           },
         });
       });
@@ -132,21 +150,21 @@ window._R = function (uniModule) {
 document.addEventListener('UniAppJSBridgeReady', async function () {
   console.log("UniAppJSBridgeReady")
   // 远程调用的非可序列化对象，返回值需要使用RR包裹
-  const TrtcCloud = _R("TrtcCloud");
-  window.tencentTRTC = _R(await TrtcCloud.createInstance(1,32,5));
+  const TrtcCloud = $R2("TrtcCloud");
+  window.tencentTRTC = $R2(await TrtcCloud.createInstance(1,32,5));
 
-  window.uni = _R("uni");
-  window.uni.onAccelerometerChange((res) => {
-    // alert(JSON.stringify(res))
-  })
+  window.uni = $R2("uni");
+  // window.uni.onAccelerometerChange((res) => {
+  //   // alert(JSON.stringify(res))
+  // })
 
-  window.plus = _R("plus");
+  window.plus = $R2("plus");
 
   await window.plus["screen.lockOrientation"]('landscape-primary');
   const a = await window.plus["device.model"].__VALUE__;
   // alert(JSON.stringify(a))
 
-  window.permision = _R("permision");
+  window.permision = $R2("permision");
 
   const info = await window.uni.getSystemInfoSync();
   // alert(JSON.stringify(info))
@@ -155,7 +173,7 @@ document.addEventListener('UniAppJSBridgeReady', async function () {
     window.permision.requestAndroidPermission('android.permission.CAMERA');
   }
 
-  window.nvue = _R("nvue");
+  window.nvue = $R2("nvue");
 
   sdkAppId = await window.nvue.sdkAppId.__VALUE__;
   userSig = await window.nvue.userSig.__VALUE__;
@@ -434,9 +452,9 @@ async function apiready() {
       btn: ['去授权', '取消'], //按钮
       title: '授权请求'
     }, async function () {
-      let ret = await _R(await permision.requestAndroidPermission('android.permission.RECORD_AUDIO'))
+      let ret = await $R2(await permision.requestAndroidPermission('android.permission.RECORD_AUDIO'))
       if (ret === 1) {
-        ret = await _R(await permision.requestAndroidPermission('android.permission.CAMERA'))
+        ret = await $R2(await permision.requestAndroidPermission('android.permission.CAMERA'))
       }
       layer.closeAll()
     }, function() {
